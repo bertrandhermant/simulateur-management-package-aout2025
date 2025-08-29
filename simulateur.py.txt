@@ -1,0 +1,49 @@
+import streamlit as st
+import pandas as pd
+
+# Charger le fichier Excel
+fichier = "Nouveau-simulateur-21.07.2025-ESSAI.xlsx"
+df = pd.read_excel(fichier, sheet_name="Données de calcul", header=None)
+
+# Affichage des lignes 1 à 104 pour consultation et saisie
+st.title("Simulateur Management Package – Calcul Automatisé")
+st.subheader("Paramètres, instructions et données à remplir (lignes 1 à 104 du fichier)")
+st.dataframe(df.iloc[:104])
+
+st.write("---")
+
+# Exemple de saisie rapide sur les principaux paramètres pour le calcul
+st.subheader("Entrer les valeurs nécessaires au calcul (adapter selon la fiche Excel)")
+valeur_sortie = st.number_input("Valeur des titres à la sortie de l'opération (€)", min_value=0, value=10000)
+prix_acquisition = st.number_input("Prix d'acquisition (€)", min_value=0, value=0)
+
+# Section calculs -- logiques du simulateur à partir des lignes 105
+def calcul_montant_net(valeur_sortie, prix_acquisition):
+    # Plus-value
+    plus_value = valeur_sortie - prix_acquisition
+    # Impôt flat tax (12.8% + 17.2%)
+    impot = plus_value * 0.128 + plus_value * 0.172 if plus_value > 0 else 0
+    # Montant net perçu
+    montant_net = valeur_sortie - impot if valeur_sortie > 0 else 0
+    # Taux effectif d'imposition
+    taux_effectif = (impot / valeur_sortie) if valeur_sortie > 0 else 0
+    return plus_value, impot, montant_net, taux_effectif
+
+# Exécution des calculs
+if st.button("Calculer les résultats automatiques"):
+    pv, imp, net, taux = calcul_montant_net(valeur_sortie, prix_acquisition)
+    st.markdown(f"**Plus-value de cession** : {pv:.2f} €")
+    st.markdown(f"**Impôt à payer (flat tax)** : {imp:.2f} €")
+    st.markdown(f"**Montant net perçu** : {net:.2f} €")
+    st.markdown(f"**Taux effectif d'imposition** : {taux:.2%}")
+
+st.write("---")
+
+# Section pour voir les lignes de calcul (à partir de la ligne 105)
+st.subheader("Logique des calculs du simulateur (lignes à partir de la 105 du fichier)")
+st.dataframe(df.iloc[104:].head(30)) # affichage des 30 premières lignes après 104 (adapter selon besoin)
+
+st.write("Vous pouvez adapter le code pour intégrer tous les taux, fractions et modules de calcul métier détaillés sous la ligne 104 du fichier Excel.")
+
+st.write("---")
+st.info("Pour aller plus loin : ajoutez des champs automatisés multi-titres, multi-situations familiales, calculs sociaux/IR ou export Excel/PDF selon la structure métier du simulateur.")
